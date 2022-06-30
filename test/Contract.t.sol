@@ -3,11 +3,41 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
-contract ContractTest is Test {
+error Unauthorized();
+
+contract ContractA {
+    uint256 testNumber;
+    address public immutable owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function increment() public {
+        if (msg.sender != owner) {
+            revert Unauthorized();
+        }
+        testNumber++;
+    }
+}
+
+contract ContractATest is Test {
+    ContractA contracta;
     uint256 testNumber;
 
     function setUp() public {
+        contracta = new ContractA();
         testNumber = 9000;
+    }
+
+    function testIsOwnerIncrement() public {
+        contracta.increment();
+    }
+
+    function testIsNotOwnerIncrement() public {
+        vm.expectRevert(Unauthorized.selector);
+        vm.prank(address(0));
+        contracta.increment();
     }
 
     function testFailNumberIs42() public {
